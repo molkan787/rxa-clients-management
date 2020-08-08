@@ -1,46 +1,90 @@
 <template>
   <v-app>
-    <v-app-bar app color="primary" dark elevation="1">
-      Electron Vuetify
-    </v-app-bar>
-    <v-content>
-      <v-card class="content" elevation="0">
-        <HomePage />
-      </v-card>
+    <NavigationDrawer @navigation="navigation" />
+    <v-content class="my-content">
+      <keep-alive>
+        <component v-if="Session.isSignedIn" :is="currentView" />
+      </keep-alive>
     </v-content>
+    <ClientProfile />
     <Dialog />
+    <div class="title-bar-shadow"></div>
+    <LoginPage v-if="!Session.isSignedIn" />
   </v-app>
 </template>
 
 <script>
-import HomePage from "./components/HomePage";
+import { mapState } from 'vuex';
+import NavigationDrawer from './components/NavigationDrawer';
 import Dialog from "./components/Dialog";
+import Dashboard from "./views/Dashboard";
+import Clients from "./views/Clients";
+import Users from "./views/Users";
+import ClientProfile from './views/ClientProfile';
+import Account from './views/Account';
+import LoginPage from './views/Login';
 
 export default {
   name: "App",
-
   components: {
-    HomePage,
+    NavigationDrawer,
     Dialog,
+    Dashboard,
+    Clients,
+    Users,
+    ClientProfile,
+    LoginPage,
+    Account,
+  },
+  computed: mapState(['Session']),
+  data:() => ({
+    currentView: 'Clients',
+  }),
+  methods: {
+    navigation(item){
+      this.currentView = item.component;
+    }
   }
 };
 </script>
 
-<style scoped>
-.content {
-  padding: 20px;
-  height: 100%;
+<style lang="scss" scoped>
+$drawer-width: 256px;
+.my-content {
+  padding: 8px !important;
+  height: 100vh;
+  width: calc(100vw - #{$drawer-width});
+  margin-left: $drawer-width;
 }
 </style>
 
 <style>
 html, body {
   overflow: hidden !important;
+  padding: 0;
+  margin: 0;
+}
+.title-bar-shadow{
+  position: fixed;
+  top: -2px;
+  left: 0;
+  width: 100vw;
+  height: 2px;
+  box-shadow: 0 0 2px #0000003d;
+}
+.theme--light.v-application{
+  background-color: white !important;
 }
 *:not(input) {
   user-select: none;
 }
-h1, h2, h3, h4, h5, h6, div, p, span:not(.v-btn__content), label {
+h1, h2, h3, h4, h5, h6,
+div:not(.v-list-item__title):not(.v-list-item):not(.v-list-item__icon):not(.v-list-item__content),
+p, span:not(.v-btn__content):not(th > span), label {
   cursor: default;
+}
+
+.v-dialog--fullscreen{
+  overflow: hidden !important;
 }
 </style>

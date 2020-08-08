@@ -15,6 +15,8 @@
 </template>
 
 <script>
+window.GENERAL_ERROR = '747cd15d-1e9e-4605-82f4-c776d3a6ed70';
+
 export default {
     data:() => ({
         open: false,
@@ -49,6 +51,10 @@ export default {
         },
 
         alert(text, title){
+            if(text == GENERAL_ERROR){
+                text = 'An error occured, Please try again';
+                title = 'Error';
+            }
             return new Promise(resolve => {
                 this.resolve = resolve;
                 this.handleRequest(title || 'Info', text, 'alert');

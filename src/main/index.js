@@ -19,21 +19,17 @@ const DEV = process.env.NODE_ENV === 'development';
 global.DEV = DEV;
 
 function createWindow () {
-  /**
-   * Initial window options
-   */
   mainWindow = new BrowserWindow({
     height: 620,
     width: 1000,
-    useContentSize: true,
-    maximizable: false,
-    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       webSecurity: false,
     }
   })
 
+  mainWindow.setMinimumSize(1000, 620);
+  mainWindow.maximize();
   mainWindow.setMenu(null)
   mainWindow.loadURL(winURL)
   if(DEV){
