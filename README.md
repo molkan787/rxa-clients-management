@@ -1,4 +1,4 @@
-# resto-pos
+# rxa-clients-management
 
 > An electron-vue project
 
