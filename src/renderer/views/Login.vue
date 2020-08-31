@@ -54,7 +54,7 @@ export default {
     },
     mounted(){
         if(DEV){
-            this.username = 'maxwell';
+            this.username = 'admin';
             this.password = '123456';
             this.login();
         }

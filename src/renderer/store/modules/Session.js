@@ -6,11 +6,15 @@ const state = {
   user: null,
 }
 
+const getters = {
+  isLimitedUser: state => state.usertype !== 'admin'
+}
+
 const mutations = {
   SET_USER(state, user){
     Object.patch(state, user || {}, ['username', 'usertype', 'fullname']);
-      state.isSignedIn = !!user;
       state.user = user;
+      state.isSignedIn = !!user;
   }
 }
 
@@ -22,6 +26,7 @@ const actions = {
 
 export default {
   state,
+  getters,
   mutations,
   actions
 }

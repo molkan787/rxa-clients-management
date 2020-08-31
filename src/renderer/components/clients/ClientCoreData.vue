@@ -19,7 +19,7 @@
                     {{ getPropValue(prop) }}
                 </template>
 
-                <v-btn @click="editClick(prop)" v-if="!editing[prop.value] && prop.value != 'no'"
+                <v-btn @click="editClick(prop)" v-if="!editing[prop.value] && isEditable(prop)"
                     :title="`Edit ${prop.text}`" class="edit-btn"
                     color="primary" fab x-small elevation="0">
                     <v-icon>edit</v-icon>
@@ -32,6 +32,7 @@
 <script>
 import FormField from '../templates/FormField';
 import ClientsModel from '../../models/Clients.model';
+import ClientsController from '../../controllers/Clients.controller';
 export default {
     components: {
         FormField,
@@ -44,6 +45,10 @@ export default {
         template: {
             type: Object,
             required: true,
+        },
+        'not_editable': {
+            type: Array,
+            default: () => ['data.outstanding_fee'],
         }
     },
     data: () => ({
@@ -51,10 +56,14 @@ export default {
         editvalues: {},
     }),
     methods: {
+        isEditable(prop){
+            return !this["not_editable"].includes(prop.value);
+        },
         saveClick(prop){
-            ClientsModel.patchClient(this.data, {
-                [prop.value]: this.editvalues[prop.value],
-            }).catch(err => {
+            const raw_val = this.editvalues[prop.value];
+            const val = prop.type == 'number' ? parseFloat(raw_val) : raw_val;
+            ClientsController.setClientDataField(this.data._id, prop.value, val)
+            .catch(err => {
                 console.error(err);
                 alert(GENERAL_ERROR);
             })
@@ -71,6 +80,7 @@ export default {
             const { value, type } = prop;
             let val = Object.getPathedValue(this.data, value);
             if(type == 'currency') val = this.$options.filters.price(val);
+            else if(type == 'date' && val) val = this.$options.filters.date(val);
             return val || '---';
         },
     }

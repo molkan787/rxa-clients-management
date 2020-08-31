@@ -1,9 +1,13 @@
 export function date(str){
-    return new Date(str).toLocaleDateString();
+    const date = new Date(str);
+    if(isNaN(date.getTime())) return str;
+    return date.toLocaleDateString();
 }
 
 export function datetime(str){
-    return new Date(str).toLocaleString();
+    const date = new Date(str);
+    if(isNaN(date.getTime())) return str;
+    return date.toLocaleString();
 }
 
 export function price(val){

@@ -1,5 +1,5 @@
 <template>
-    <Modal :open="open" :loading="loading" title="Add Client" okButtonText="Add" maxWidth="700" @okClick="okClick" @cancelClick="open = false">
+    <Modal :open="open" :loading="loading" :title="title" okButtonText="Add" maxWidth="700" @okClick="okClick" @cancelClick="open = false">
         <ClientForm ref="form" :data="formData" :template="template" formname="creation" />
     </Modal>
 </template>
@@ -23,6 +23,11 @@ export default {
         template: null,
         formData: {},
     }),
+    computed: {
+        title(){
+            return (this.template && `Add client (${this.template.title})`) || '';
+        }
+    },
     methods: {
         handle(templateName){
             this.templateName = templateName;

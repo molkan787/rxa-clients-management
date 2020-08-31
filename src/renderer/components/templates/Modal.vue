@@ -7,6 +7,7 @@
             <slot></slot>
         </v-card-text>
         <v-card-actions class="pa-4">
+          <slot name="controls"></slot>
           <v-spacer></v-spacer>
           <v-btn color="grey darken-1" outlined @click="cancelClick" v-if="cancelButtonText">{{ cancelButtonText }}</v-btn>
           <v-btn color="blue darken-1" dark elevation="0" @click="okClick">{{ okButtonText }}</v-btn>

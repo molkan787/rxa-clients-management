@@ -18,6 +18,10 @@ export default {
             type: 'string',
             maxLength: 200,
         },
+        clients: {
+            type: 'array',
+            default: [],
+        },
         created_at: {
             type: 'string'
         },

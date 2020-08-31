@@ -1,4 +1,4 @@
-export function createRules({ name, maxLength, minLength, chars, required, charsErrorText }){
+export function createRules({ name, maxLength, minLength, min, max, chars, required, charsErrorText }){
     const rules = [];
 
     if(required || (typeof required == 'undefined' && minLength)){
@@ -10,12 +10,20 @@ export function createRules({ name, maxLength, minLength, chars, required, chars
     }
 
     if(maxLength){
-        rules.push(val => val.length <= maxLength || `${name} must be less than ${maxLength} characters long`)
+        rules.push(val => val.length <= maxLength || `${name} must be less than ${maxLength} characters long`);
     }
 
     if(chars){
         const errText = charsErrorText || getCharsErrorMessage(chars);
         rules.push(val => !val || chars.test(val) || errText);
+    }
+
+    if(min){
+        rules.push(val => !val.length || parseFloat(val) >= min || `Minimum value of ${name} is ${min}`);
+    }
+
+    if(max){
+        rules.push(val => !val.length || parseFloat(val) <= max || `Maximum value of ${name} is ${max}`);
     }
 
     return rules;

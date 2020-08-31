@@ -1,8 +1,8 @@
 <template>
     <v-text-field
         @blur="$emit('blur', $event)"
-        @input="$emit('input', $event)"
-        :value="value"
+        @input="input($event)"
+        :value="myvalue"
         :type="inputType"
         :label="text"
         :placeholder="text"
@@ -35,6 +35,17 @@ export default {
         prefix(){
             if(this.type == 'currency') return this.$config.currency;
             else return '';
+        },
+        myvalue(){
+            return this.type == 'date' ? (this.value || '').split('T')[0] : this.value;
+        }
+    },
+    methods: {
+        input(value){
+            if(this.type == 'date'){
+                value = new Date(value).toJSON();
+            }
+            this.$emit('input', value);
         }
     }
 }

@@ -18,6 +18,11 @@ String.isAlphanumericOnly = str => /^[a-zA-Z\d]+$/.test(str);
 String.isAlphaOnly = str => /^[a-zA-Z]+$/.test(str);
 String.isNoSpecialChars = str => /^[a-zA-Z\d\ ]+$/.test(str);
 
+String.prototype.capitalize = function (){
+    const str = this.toLowerCase();
+    return str.charAt(0).toUpperCase() + str.substr(1);
+}
+
 Object.encodepaths = function encodepaths(src){
     const result = {};
     const props = getValuesPaths(src);
@@ -69,6 +74,8 @@ function setPathedValue(obj, path, value){
     const lastName = names[names.length - 1];
     _obj[lastName] = value;
 }
+
+Object.setPathedValue = setPathedValue;
 
 Object.getPathedValue = function getPathedValue(obj, path){
     const names = path.split('.');

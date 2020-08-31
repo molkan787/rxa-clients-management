@@ -21,7 +21,8 @@ export default class SessionController extends Controller{
     }
 
     static logout(){
-        store.dispatch('setUser', null);
+        // store.dispatch('setUser', null);
+        window.location.reload();
     }
 
 }

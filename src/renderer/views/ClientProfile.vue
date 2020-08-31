@@ -10,36 +10,71 @@
                 </v-btn>
             </v-toolbar>
             <div class="client-profile">
-                <ClientCoreData :data="client" :template="template" />
-                <v-divider vertical></v-divider>
-                <ClientPayments />
-                <v-divider vertical></v-divider>
-                <ClientActivities />
+                <v-tabs v-model="tabIndex" background-color="darkgrey" dark>
+                    <v-tab>Core Informations</v-tab>
+                    <v-tab>Expenses</v-tab>
+                    <v-tab>Documents</v-tab>
+                    <v-tab>Settings</v-tab>
+
+                    <v-tab-item>
+                        <CoreTab :client="client" :template="template" />
+                    </v-tab-item>
+
+                    <v-tab-item>
+                        <ExpensesTab :client="client" />
+                    </v-tab-item>
+
+                    <v-tab-item>
+                        <DocumentsTab :client="client" />
+                    </v-tab-item>
+
+                    <v-tab-item>
+                        <SettingsTab :client="client" @delete-client-click="deleteClientClick" />
+                    </v-tab-item>
+
+                </v-tabs>
             </div>
         </v-card>
     </v-dialog>
 </template>
 
 <script>
-import ClientCoreData from '../components/clients/ClientCoreData';
-import ClientPayments from '../components/clients/ClientPayments';
-import ClientActivities from '../components/clients/ClientActivities';
+import CoreTab from '../components/client-profile/CoreTab';
+import ExpensesTab from '../components/client-profile/ExpensesTab';
+import SettingsTab from '../components/client-profile/SettingsTab';
+import DocumentsTab from '../components/client-profile/DocumentsTab';
+
 export default {
     components: {
-        ClientCoreData,
-        ClientPayments,
-        ClientActivities
+        CoreTab,
+        ExpensesTab,
+        SettingsTab,
+        DocumentsTab
     },
     data: () => ({
         open: false,
         client: {},
         template: {},
+        tabIndex: 0,
     }),
     methods: {
         handle(client, template){
             this.client = client;
             this.template = template;
+            this.tabIndex = 0;
             this.open = true;
+        },
+        async deleteClientClick(){
+            if(await confirm(`Delete client "${this.client.business_name}" ?`)){
+                try {
+                    await this.client.remove();
+                    await alert('Client successfully deleted!', 'Success');
+                    this.open = false;
+                } catch (error) {
+                    console.error(error);
+                    alert(GENERAL_ERROR);
+                }
+            }
         },
     },
     created(){
@@ -51,18 +86,6 @@ export default {
 
 <style lang="scss" scoped>
 .client-profile{
-    display: flex;
-    justify-content: space-between;
-    padding: 20px;
     height: calc(100vh - 48px);
-    & > div{
-        flex: 1;
-    }
-    hr{
-        margin: 0 20px;
-    }
-}
-.client-core-data{
-    max-width: 550px;
 }
 </style>

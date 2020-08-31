@@ -16,6 +16,7 @@
 
 <script>
 window.GENERAL_ERROR = '747cd15d-1e9e-4605-82f4-c776d3a6ed70';
+window.NOT_READY = 'fba1266d-eac5-4d19-8969-8cfafd9dee76';
 
 export default {
     data:() => ({
@@ -54,6 +55,9 @@ export default {
             if(text == GENERAL_ERROR){
                 text = 'An error occured, Please try again';
                 title = 'Error';
+            }else if(text == NOT_READY){
+                text = 'This function is not implemented yet';
+                title = 'In Development';
             }
             return new Promise(resolve => {
                 this.resolve = resolve;

@@ -1,138 +1,139 @@
 <template>
     <div class="clients-page">
-        <PageHeader>
-            <v-btn @click="addClientClick" color="primary" elevation="0">
+        <PageHeader v-model="search">
+            <template v-slot:left-side>
+                <div>
+                    <v-tabs dense>
+                        <v-tab
+                            v-for="template in templates"
+                            :key="template.value"
+                            @click="currentTemplateName = template.value"
+                        >{{ template.text }}</v-tab>
+                    </v-tabs>
+                </div>
+            </template>
+            <v-btn v-if="!isLimitedUser" @click="addClientClick" color="primary" elevation="0">
                 <v-icon left>add</v-icon>
                 Add client
             </v-btn>
         </PageHeader>
-        <v-data-table
-            :headers="headers"
-            :items="clients"
-            item-key="_id"
-            :expanded="[]"
-            show-expand>
-
-            <template v-slot:item="{ item, headers, isExpanded, expand }">
-                <tr>
-                    <td class="text-start" v-for="h in headers" :key="h.value" :colspan="h.value == '_' ? 2 : 1" :style="'display:'+(h.value == '__' ? 'none' : 'default')">
-                        <template v-if="h.value == 'data-table-expand'">
-                            <i @click="expand(!isExpanded)" :class="'mdi-chevron-' + (isExpanded ? 'up' : 'down')" role="button" class="v-icon notranslate v-data-table__expand-icon v-icon--link mdi theme--light"></i>
-                        </template>
-                        <template v-else-if="h.value == '_'">
-                            <v-btn @click="openClient(item)" outlined color="primary" small>Open Profile</v-btn>
-                            <v-btn @click="deleteClick(item)" outlined color="red" small>Delete</v-btn>
-                        </template>
-                        <template v-else-if="h.type == 'currency'">
-                            {{ getPropValue(item, h.value) | price_minimal }}
-                        </template>
-                        <template v-else>
-                            {{ getPropValue(item, h.value) }}
-                        </template>
-                    </td>
-                </tr>
-            </template>
-
-            <template v-slot:expanded-item="{ item }">
-                <tr>
-                    <template v-for="h in expandedHeaders">
-                        <td class="expanded-row-td" :key="h.value">
-                            <span>{{ h.text }}</span> <br>
-                            {{ getPropValue(item, h.value) }}
-                        </td>
-                    </template>
-                </tr>
-            </template>
-
-        </v-data-table>
-        <AddClientModal ref="addClientModal" />
+        <div style="width:100%;height: 10px">
+            <AddClientModal ref="addClientModal" />
+        </div>
+        <ClientsListTable :template="template" :clients="clients" :reminders="reminders" :search="search" />
     </div>
 </template>
 
 <script>
 import PageHeader from '../components/templates/PageHeader';
 import AddClientModal from '../components/AddClientModal';
+import ClientsListTable from '../components/clients/ClientsListTable';
 import ClientsModel, { ClientsTemplates } from '../models/Clients.model';
 import ClientsTemplatesData from '../templates/Clients.templates';
+import RemindersModel from '../models/Reminders.model';
+import { daysDiff } from '../helpers/time';
+import { mapGetters } from 'vuex';
+import { ReminderTypes } from '../services/Reminders.service';
 export default {
     components: {
         AddClientModal,
         PageHeader,
+        ClientsListTable
     },
     computed: {
+        ...mapGetters(['isLimitedUser']),
         template(){
             return ClientsTemplatesData[this.currentTemplateName];
-        },
-        headers(){
-            const { props, table } = this.template;
-            const headers = props.filter(prop => table.primary_fields.includes(prop.value));
-            headers.push(
-                { text: ' ', value: '_', sortable: false },
-                { text: ' ', value: '__', sortable: false }
-            );
-            return headers;
-        },
-        expandedHeaders(){
-            const { props, table } = this.template;
-            const headers = props.filter(prop => !table.primary_fields.includes(prop.value));
-            headers.unshift({ text: '', value: '_'})
-            return headers;
+        }
+    },
+    watch: {
+        currentTemplateName(){
+            this.search = '';
+            this.loadClients();
         }
     },
     data: () => ({
+        templates: [],
         currentTemplateName: ClientsTemplates.LTD_COMPANIES,
         clients: [],
+        reminders: {},
         clientsObservable: null,
+        reminersObservable: null,
+        search: ''
     }),
     methods: {
-        openClient(client){
-            openClientProfile(client, this.template);
-        },
-        async deleteClick(client){
-            if(await confirm(`Delete client "${client.business_name}" ?`)){
-                try {
-                    await client.remove();
-                } catch (error) {
-                    console.error(error);
-                    alert(GENERAL_ERROR);
-                }
-            }
-        },
-        getPropValue(item, propPath){
-            if(propPath == '_' || propPath == '__') return ' ';
-            return Object.getPathedValue(item, propPath) || '---';
-        },
         addClientClick(){
             this.$refs.addClientModal.handle(this.currentTemplateName);
         },
         loadClients(){
-            ClientsModel.getClients(this.currentTemplateName).$.subscribe(docs => {
-                this.clients = docs; //docs.map(doc => doc.toJSON());
-                openClientProfile(docs[0], this.template)
+            if(this.clientsObservable) this.clientsObservable.unsubscribe();
+            this.clients = [];
+            this.clientsObservable = ClientsModel.getClients(this.currentTemplateName)
+            .$.subscribe(docs => {
+                this.clients = docs;
+                this.loadReminders();
+                // openClientProfile(docs[0], this.template);
+                // editReminder({ client: docs[0] })
+            }); 
+        },
+        loadReminders(){
+            const clients_ids = this.clients.map(client => client._id);
+            if(this.reminersObservable) this.reminersObservable.unsubscribe();
+            this.reminersObservable = RemindersModel.getRemindersByBulkClients(clients_ids, {
+                archived: false,
+                type: {
+                    $ne: ReminderTypes.PAYMENT
+                }
             })
+            .$.subscribe(docs => this.reminders = this.mapReminders(docs));
+        },
+        mapReminders(items){
+            const map = {};
+            for(let item of items){
+                const { client_id } = item;
+                if(!(map[client_id] instanceof Array)){
+                    map[client_id] = [];
+                }
+                map[client_id].push(item);
+            }
+            return map;
         }
     },
     mounted(){
         this.loadClients();
+    },
+    created(){
+        const names = Object.values(ClientsTemplates);
+        const templates = [];
+        for(let name of names){
+            templates.push({
+                value: name,
+                text: ClientsTemplatesData[name].title,
+            })
+        }
+        this.templates = templates;
     }
 }
 </script>
 
 <style lang="scss" scoped>
-.my-card, .clients-page{
+.clients-page{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.my-card{
     height: 100%;
 }
-.expanded-row-td{
-    span{
-        color: rgba(0,0,0,.54);
+.templates-switcher{
+    margin-left: 10px;
+    button{
+        height: 40px !important;
+        padding: 0 20px !important;
     }
-    padding: 10px 16px 50px 16px;
-    vertical-align: top;
 }
-</style>
-
-<style>
-.clients-page .v-data-table tbody tr.v-data-table__expanded__content{
-    box-shadow: none !important;
+.v-tabs{
+    margin-top: -8px !important;
+    margin-left: 8px !important;
 }
 </style>

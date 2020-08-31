@@ -1,6 +1,7 @@
 import { collections } from '../database';
 import { nowJson } from '../helpers/time';
 import md5 from 'md5';
+import { isRxDocument } from 'rxdb';
 
 export const UserType = Object.freeze({
     Admin: 'admin',
@@ -13,8 +14,14 @@ export default class UsersModel{
         return collections.users;
     }
 
-    static getUsers(){
-        return this.collection.find();
+    static getUsers(selector){
+        if(typeof selector == 'object'){
+            return this.collection.find({
+                selector,
+            });
+        }else{
+            return this.collection.find();
+        }
     }
 
     static async createUser(data){
@@ -79,6 +86,24 @@ export default class UsersModel{
             selector: {
                 username
             }
+        });
+    }
+
+    static async addClientToUser(user_id, client_id){
+        const user = isRxDocument(user_id) ? user_id : this.getUser(user_id).exec();
+        await user.update({
+            $push: {
+                clients: client_id
+            }
+        })
+    }
+    
+    static async removeClientFromUser(user_id, client_id){
+        const user = isRxDocument(user_id) ? user_id : this.getUser(user_id).exec();
+        await user.atomicUpdate(data => {
+            const index = data.clients.indexOf(client_id);
+            data.clients.splice(index, 1);
+            return data;
         });
     }
 

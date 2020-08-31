@@ -43,6 +43,7 @@ export default {
         readonly(){
             const result = {}
             const { readonly } = this.form;
+            if(!readonly) return result;
             readonly.forEach(prop => result[prop] = true);
             return result;
         },
@@ -58,8 +59,12 @@ export default {
         },
         props(){
             const props = this.template.props;
-            const { fields, all } = this.form;
-            return all ? props : props.filter(p => fields.includes(p.value));
+            const { fields, all, excludes } = this.form;
+            if(all){
+                return excludes ? props.filter(p => !excludes.includes(p.value)) : props;
+            }else{
+                return props.filter(p => fields.includes(p.value));
+            }
         }
     },
     methods: {
@@ -73,7 +78,7 @@ export default {
         update(){
             const { defaults } = this.form;
             for(let prop of this.props){
-                this.$set(this.data, prop.value, defaults[prop.value] || '');
+                this.$set(this.data, prop.value, (defaults && defaults[prop.value]) || '');
             }
         }
     },

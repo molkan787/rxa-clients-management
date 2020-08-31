@@ -27,16 +27,11 @@
             <v-divider class="my-divider"></v-divider>
 
             <v-list-item-group v-model="current" active-class="white--text" >
-                <v-list-item
-                    v-for="item in items" :key="item.title" link >
-                    <v-list-item-icon>
-                    <v-icon>{{ item.icon }}</v-icon>
-                    </v-list-item-icon>
-
-                    <v-list-item-content>
-                    <v-list-item-title>{{ item.title }}</v-list-item-title>
-                    </v-list-item-content>
-                </v-list-item>
+                <NavigationItem
+                    v-for="item in items"
+                    :key="item.title"
+                    :item="item"
+                />
             </v-list-item-group>
 
         </v-list>
@@ -44,22 +39,46 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapGetters } from 'vuex';
 import SessionController from '../controllers/Session.controller';
+import NavigationItem from './NavigationItem';
 export default {
-    computed: mapState(['Session']),
+    components: {
+        NavigationItem
+    },
+    computed: {
+        ...mapState(['Session']),
+        ...mapGetters(['isLimitedUser']),
+        items(){
+            const clients = { component: 'Clients', title: 'Clients', icon: 'business' };
+            const account = { component: 'Account', title: 'Account', icon: 'account_circle' };
+            const activeReminders = { component: 'ActiveReminders', title: 'Active Reminders', icon: 'notifications_active' };
+            return this.isLimitedUser ? [
+                clients,
+                activeReminders,
+                { divider: true },
+                account
+            ] : [
+                clients,
+                { component: 'LtdMonthlyDue', title: 'LTD Monthly Due List', icon: 'location_city' },
+                activeReminders,
+                { divider: true },
+                { component: 'Users', title: 'Users', icon: 'people_outline' },
+                account,
+                { component: 'Setting', title: 'Setting', icon: 'settings', no_pad: true },
+            ]
+        }
+    },
     data:() => ({
-        current: 0,
-        items: [
-            // { component: 'Dashboard', title: 'Dashboard', icon: 'dashboard' },
-            { component: 'Clients', title: 'Clients', icon: 'business' },
-            { component: 'Users', title: 'Users', icon: 'people_outline' },
-            { component: 'Account', title: 'Account', icon: 'account_circle' },
-        ],
+        current: null,
     }),
     watch: {
-        current(){
-            this.$emit('navigation', this.items[this.current]);
+        current(newItem, oldItem){
+            if(newItem == undefined){
+                this.$nextTick(() => this.current = oldItem);
+                return;
+            }
+            this.$emit('navigation', newItem);
         }
     },
     methods: {
@@ -71,6 +90,9 @@ export default {
         logout(){
             SessionController.logout();
         }
+    },
+    created(){
+        this.current = this.items[0];
     }
 }
 </script>
