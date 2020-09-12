@@ -1,13 +1,15 @@
+import { DateTime } from "luxon";
+
 export function date(str){
-    const date = new Date(str);
-    if(isNaN(date.getTime())) return str;
-    return date.toLocaleDateString();
+    const d = DateTime.fromISO(str);
+    if(!d.isValid) return '---';
+    return d.setZone('UTC').toFormat('dd/MM/yyyy');
 }
 
 export function datetime(str){
-    const date = new Date(str);
-    if(isNaN(date.getTime())) return str;
-    return date.toLocaleString();
+    const d = DateTime.fromISO(str);
+    if(!d.isValid) return '---';
+    return d.setZone('UTC').toFormat('dd/MM/yyyy HH:mm:ss');
 }
 
 export function price(val){

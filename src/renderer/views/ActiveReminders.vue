@@ -2,7 +2,9 @@
     <div class="active-reminders">
         <v-data-table
             :headers="headers"
-            :items="items">
+            :items="items"
+            :footer-props="{'items-per-page-options': [10, 20, 50]}"
+            :loading="loading">
             <template v-slot:item="{item}">
                 <tr>
                     <td class="text-start">{{ item.date | date }}</td>
@@ -25,26 +27,39 @@ export default {
     data: () => ({
         headers: [
             { value: 'date', text: 'Date' },
-            { value: 'title', text: 'Title' },
-            { value: 'client', text: 'Client' },
-            { value: '_', text: ' ' }
+            { value: 'title', text: 'Title', sortable: false },
+            { value: 'client', text: 'Client', sortable: false },
+            { value: '_', text: ' ', sortable: false }
         ],
         items: [],
         clientsNames: {},
         observable: null,
-        clientObservable: null
+        clientObservable: null,
+        query: null,
+        loading: false
     }),
     methods: {
         showDetails(item){
             openReminderDetails(item);
         },
-        loadItems(){
-            this.observable && this.observable.unsubscribe();
-            this.observable = RemindersService.getActiveReminders()
-                .$.subscribe(docs => {
+        subscribe(){
+            this.unsubscribe();
+            if(this.query){
+                this.observable = this.query.$.subscribe(docs => {
                     this.items = docs;
                     this.loadClientsNames();
                 });
+            }
+        },
+        unsubscribe(){
+            // console.log('this.observable', this.observable)
+            this.observable && this.observable.unsubscribe();
+            this.clientObservable && this.clientObservable.unsubscribe();
+        },
+        loadItems(){
+            this.loading = true;
+            this.query = RemindersService.getActiveReminders();
+            this.subscribe();
         },
         loadClientsNames(){
             const clients_ids = this.items.map(i => i.client_id);
@@ -58,10 +73,17 @@ export default {
                 map[client._id] = client.business_name;
             }
             this.clientsNames = map;
+            this.loading = false;
         }
     },
     mounted(){
         this.loadItems();
+    },
+    activated(){
+        this.subscribe();
+    },
+    deactivated(){
+        this.unsubscribe();
     }
 }
 </script>

@@ -13,6 +13,14 @@ export default {
         paid_months: {
             type: 'object',
             default: {}
+        },
+        date_year: {
+            type: 'string',
+            default: ''
+        },
+        date_months: {
+            type: 'object',
+            default: {}
         }
     },
     attachments: {},

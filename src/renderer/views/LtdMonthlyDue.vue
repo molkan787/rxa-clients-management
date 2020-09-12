@@ -10,7 +10,7 @@
             </v-btn>
         </PageHeader>
         <div id="ltd-monthly-list-table">
-            <ClientsListTable :template="template" :clients="clients" :reminders="{}" />
+            <ClientsListTable :loading="loading" :template="template" :clients="clients" :reminders="{}" />
         </div>
     </div>
 </template>
@@ -37,12 +37,27 @@ export default {
         clients: [],
         currentMonthName: '',
         clientsObservable: null,
+        clientsQuery: null,
         loading: false,
     }),
     methods: {
+        subscribe(){
+            this.unsubscribe();
+            if(this.clientsQuery){
+                this.clientsObservable = this.clientsQuery.$.subscribe(docs => {
+                    this.clients = docs;
+                    this.loading = false;
+                }); 
+            }
+        },
+        unsubscribe(){
+            this.clientsObservable && this.clientsObservable.unsubscribe();
+        },
         loadClients(){
+            this.loading = true;
             this.clients = [];
-            ClientsModel.getLtdMonthlyDueList().$.subscribe(docs => this.clients = docs); 
+            this.clientsQuery = ClientsModel.getLtdMonthlyDueList();
+            this.subscribe();
         },
         printClick(){
             const items = this.clients.map(client => client.toJSON());
@@ -62,6 +77,12 @@ export default {
     mounted(){
         this.currentMonthName = getMonthName();
         this.loadClients();
+    },
+    activated(){
+        this.subscribe();
+    },
+    deactivated(){
+        this.unsubscribe();
     }
 }
 </script>

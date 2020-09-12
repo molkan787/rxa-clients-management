@@ -8,7 +8,7 @@
                     <v-avatar left>
                         <v-icon small>block</v-icon>
                     </v-avatar>
-                    Not Paid
+                    Not Paid&nbsp;&nbsp;
                 </v-chip>
             </template>
             <template v-else-if="isPaid">
@@ -17,14 +17,19 @@
                         <v-icon small>check_circle_outline</v-icon>
                     </v-avatar>
                     Paid
+                    <template v-if="showPaymentDate && item.payment_date">
+                        on {{ item.payment_date | date }}
+                    </template>
+                    &nbsp;&nbsp;
                 </v-chip>
             </template>
             <template v-else>
                 <v-chip small class="ma-1" >
-                {{ item.paid | price }} / {{ item.due | price }}
+                {{ item.paid | price }} / {{ item.due | price }}&nbsp;&nbsp;
                 </v-chip>
             </template>
         </td>
+        
         <td class="controls">
             <v-btn v-if="toggleButton" @click="$emit('toggle-click', item)" outlined :color="isPaid ? 'red': 'green'" x-small>
                 {{ isPaid ? 'Mark as Not Paid' : 'Mark as Paid' }}
@@ -41,6 +46,10 @@ export default {
             required: true
         },
         toggleButton: {
+            type: Boolean,
+            default: false
+        },
+        showPaymentDate: {
             type: Boolean,
             default: false
         }

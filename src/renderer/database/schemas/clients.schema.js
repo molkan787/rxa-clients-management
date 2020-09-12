@@ -13,6 +13,7 @@ export default {
         },
         data: {
             type: 'object',
+            default: {}
         },
         created_at: {
             type: 'string'

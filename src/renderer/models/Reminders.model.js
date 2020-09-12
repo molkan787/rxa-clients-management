@@ -26,6 +26,16 @@ export default class RemindersModel{
         })
     }
 
+    static addBulkReminder(items){
+        const now = nowJson();
+        const reminders = items.map(item => ({
+            ...item,
+            created_at: item.created_at || now,
+            updated_at: now,
+        }))
+        return this.collection.bulkInsert(reminders);
+    }
+
     
     static getRemindersByBulkClients(clients_ids, filters){
         return this.collection.find({

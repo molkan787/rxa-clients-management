@@ -1,9 +1,10 @@
-import { addRxPlugin, createRxDatabase } from 'rxdb';
+import { addRxPlugin, createRxDatabase, PouchDB } from 'rxdb';
 import leveldown from 'leveldown';
 import path from 'path';
-import PouchDB from 'pouchdb';
+// import PouchDB from 'pouchdb';
 import PouchDbAdapterLevelDb from 'pouchdb-adapter-leveldb';
-import PouchDbAdapterHttp from 'pouchdb-adapter-http'
+import PouchDbAdapterHttp from 'pouchdb-adapter-http';
+// import PouchDbAdapterMemory from 'pouchdb-adapter-memory';
 import UsersSchema from './schemas/users.schema';
 import ClientsSchema from './schemas/clients.schema';
 import PaymentsSchema from './schemas/payments.schema';
@@ -17,6 +18,7 @@ import { nowJson } from '../helpers/time';
 import md5 from 'md5';
 import config from '../config';
 
+// addRxPlugin(PouchDbAdapterMemory);
 addRxPlugin(PouchDbAdapterLevelDb);
 addRxPlugin(PouchDbAdapterHttp);
 
@@ -25,25 +27,33 @@ export const collections = {};
 
 export async function init(){
     const _db = await createRxDatabase({
-        name: path.join(DataDir, 'data', 'rxa-db'),
+        name: path.join(DataDir, 'data', 'rxa-db-dev'),
         adapter: leveldown,
+        eventReduce: false
     });
     db = _db;
-    collections.users = await _db.collection({ name: 'users', schema: UsersSchema });
-    collections.clients = await _db.collection({ name: 'clients', schema: ClientsSchema });
-    collections.payments = await _db.collection({ name: 'payments', schema: PaymentsSchema });
-    collections.reminders = await _db.collection({ name: 'reminders', schema: RemindersSchema });
-    collections.metadata = await _db.collection({ name: 'metadata', schema: MetadataSchema });
-    collections.clientsAccounts = await _db.collection({ name: 'clients_accounts', schema: ClientsAccountsSchema });
-    collections.clientsDocuments = await _db.collection({ name: 'clients_documents', schema: ClientsDocumentsSchema });
-    collections.accountingEntries = await _db.collection({ name: 'accounting_entries', schema: AccountingEntriesSchema });
-    collections.entriesCategories = await _db.collection({ name: 'entries_categories', schema: EntriesCategoriesSchema });
-    setupReplications();
-    // await setup();
+    collections.users = await setupCollection({ name: 'users', schema: UsersSchema });
+    collections.clients = await setupCollection({ name: 'clients', schema: ClientsSchema });
+    collections.payments = await setupCollection({ name: 'payments', schema: PaymentsSchema });
+    collections.reminders = await setupCollection({ name: 'reminders', schema: RemindersSchema });
+    collections.metadata = await setupCollection({ name: 'metadata', schema: MetadataSchema });
+    collections.clientsAccounts = await setupCollection({ name: 'clients_accounts', schema: ClientsAccountsSchema });
+    collections.clientsDocuments = await setupCollection({ name: 'clients_documents', schema: ClientsDocumentsSchema });
+    collections.accountingEntries = await setupCollection({ name: 'accounting_entries', schema: AccountingEntriesSchema });
+    collections.entriesCategories = await setupCollection({ name: 'entries_categories', schema: EntriesCategoriesSchema });
+    // setupReplications();
+    await setup();
 }
 
 export function getDB(){
     return db;
+}
+
+async function setupCollection({ schema, name }){
+    const coll = await db.collection({ schema, name })
+    return coll;
+    // _setupReplication(coll, 'rxa_' + name);
+    // return name == 'clients_documents' ? coll : await coll.inMemory();
 }
 
 function setupReplications(){

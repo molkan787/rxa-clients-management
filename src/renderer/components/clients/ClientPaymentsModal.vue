@@ -1,9 +1,9 @@
 <template>
-    <Modal title="Manage Client's Payments" :open="open" :maxWidth="800" @okClick="open = false" okButtonText="Close" :cancelButtonText="null">
+    <Modal title="Manage Client's Payments" :open="open" :maxWidth="900" @okClick="open = false" okButtonText="Close" :cancelButtonText="null">
         <div class="client-payments-modal">
             <div class="items">
                 <table class="items">
-                    <PaymentItem class="item" v-for="(item, index) in invoices" :key="item.text + index" @toggle-click="toggleItemPaid" toggleButton :item="item" />
+                    <PaymentItem class="item" v-for="(item, index) in invoices" :key="item.text + index" @toggle-click="toggleItemPaid" showPaymentDate toggleButton :item="item" />
                 </table>
             </div>
             <div class="controls pa-2">

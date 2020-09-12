@@ -2,7 +2,7 @@
     <Modal :open="open" :loading="loading" title="Add Payment" okButtonText="Add" @okClick="okClick" @cancelClick="open = false">
         <v-form ref="form" lazy-validation>
             <FormField v-model.number="formData.amount" :rules="formRules.amount" text="Amount" type="currency" validate-on-blur />
-            <!-- <FormField v-model="formData.date" :rules="formRules.date" text="Date" type="date" validate-on-blur /> -->
+            <FormField v-model="formData.date" :rules="formRules.date" text="Date" type="date" validate-on-blur />
             <!-- <FormField v-model.trim="formData.note" text="Note" /> -->
         </v-form>
     </Modal>
@@ -36,7 +36,7 @@ export default {
         async addPayment(){
             this.loading = true;
             try {
-                await ClientsController.makePayment(this.client, parseFloat(this.formData.amount));
+                await ClientsController.makePayment(this.client, parseFloat(this.formData.amount), this.formData.date);
                 this.open = false;
             } catch (error) {
                 console.error(error);
@@ -52,6 +52,7 @@ export default {
         reset(){
             this.formData = {
                 amount: '',
+                date: ''
             };
             this.$refs.form && this.$refs.form.resetValidation();
         }

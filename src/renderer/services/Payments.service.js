@@ -5,10 +5,11 @@ export class PaymentsService{
 
     static init() {}
 
-    static async makePayment(client, amount){
+    static async makePayment(client, amount, payment_date){
+        console.log('payment_date', payment_date)
         const client_id = client._id;
         const payments = await this.getPayments(client_id, currentYear());
-        let { paid_year, paid_months, year } = payments;
+        let { paid_year, paid_months, year, date_months, date_year  } = payments;
         const { total_fee, payment_plan } = client.data;
         const paymentPlan = payment_plan || 'monthly';
         if(paymentPlan == 'monthly'){
@@ -22,34 +23,45 @@ export class PaymentsService{
                 remaining -= toAdd;
                 const newPaidAmt = paidAmt + toAdd;
                 paid_months[m] = newPaidAmt >= perMonth ? true : newPaidAmt;
+                console.log('toAdd', toAdd, m)
+                if(toAdd > 0) date_months[m] = payment_date;
                 if(remaining <= 0) break;
             }
         }else{
-            paid_year = this._getPaidAmount(paid_year, total_fee) + parseFloat(amount);
+            const toAdd = parseFloat(amount);
+            paid_year = this._getPaidAmount(paid_year, total_fee) + toAdd;
             if(paid_year >= total_fee) paid_year = true;
+            if(toAdd > 0) date_year = payment_date;
         }
+        console.log('date_months', date_months)
         await PaymentsModel.savePayment({
             client_id,
             year,
             paid_year,
-            paid_months
+            paid_months,
+            date_year,
+            date_months
         })
     }
 
-    static async setPaidAmount(client, amount, year, month){
+    static async setPaidAmount(client, amount, year, month, payment_date){
         const client_id = client._id;
         const payments = await this.getPayments(client_id, year);
-        let { paid_year, paid_months } = payments;
+        let { paid_year, paid_months, date_months, date_year } = payments;
         if(typeof month != 'undefined'){
             paid_months[month] = amount;
+            date_months[month] = payment_date;
         }else{
             paid_year = amount;
+            date_year = payment_date;
         }
         await PaymentsModel.savePayment({
             client_id,
             year,
             paid_year,
-            paid_months
+            paid_months,
+            date_year,
+            date_months
         })
     }
 
@@ -77,7 +89,7 @@ export class PaymentsService{
     }
 
     static generateInvoices(client, payments){
-        const { paid_year, paid_months, year } = payments;
+        const { paid_year, paid_months, year, date_year, date_months } = payments;
         const { total_fee, payment_plan } = client.data;
         const paymentPlan = payment_plan || 'monthly';
         if(paymentPlan == 'monthly'){
@@ -90,7 +102,8 @@ export class PaymentsService{
                     due: perMonth,
                     paid: paidAmt,
                     year,
-                    month: m
+                    month: m,
+                    payment_date: date_months[m]
                 })
             }
             return invoices;
@@ -101,6 +114,7 @@ export class PaymentsService{
                 paid: paidAmt,
                 due: total_fee,
                 year,
+                payment_date: date_year
             }]
         }
     }
@@ -113,7 +127,8 @@ export class PaymentsService{
         const payments = await PaymentsModel.getClientPayments(client_id, year).exec();
         return payments || {
             year,
-            paid_months: {}
+            paid_months: {},
+            date_months: {},
         };
     }
 

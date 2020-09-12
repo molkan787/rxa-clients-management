@@ -20,7 +20,7 @@
         <div style="width:100%;height: 10px">
             <AddClientModal ref="addClientModal" />
         </div>
-        <ClientsListTable :template="template" :clients="clients" :reminders="reminders" :search="search" />
+        <ClientsListTable :loading="loading" :template="template" :clients="clients" :reminders="reminders" :search="search" />
     </div>
 </template>
 
@@ -55,26 +55,58 @@ export default {
     data: () => ({
         templates: [],
         currentTemplateName: ClientsTemplates.LTD_COMPANIES,
+        totalClientsCount: 0,
         clients: [],
         reminders: {},
         clientsObservable: null,
         reminersObservable: null,
-        search: ''
+        clientsQuery: null,
+        remindersQuery: null,
+        search: '',
+        loading: false,
     }),
     methods: {
         addClientClick(){
             this.$refs.addClientModal.handle(this.currentTemplateName);
         },
-        loadClients(){
+        unsubscribe(){
             if(this.clientsObservable) this.clientsObservable.unsubscribe();
+            if(this.reminersObservable) this.reminersObservable.unsubscribe();
+        },
+        subscribe(){
+            this.unsubscribe();
+            if(this.clientsQuery){
+                this.clientsObservable = this.clientsQuery.$.subscribe(docs => {
+                    this.clients = docs;
+                    this.loadReminders();
+                    // openClientProfile(docs[0], this.template);
+                    // editReminder({ client: docs[0] })
+                }); 
+            }
+        },
+        // async loadClients(){
+        //     this.loading = true;
+        //     this.clients = [];
+        //     this.clients = await ClientsModel.getClients(this.currentTemplateName).exec();
+        //     await this.loadReminders();
+        //     this.loading = false;
+        // },
+        // async loadReminders(){
+        //     const clients_ids = this.clients.map(client => client._id);
+        //     const docs = await RemindersModel.getRemindersByBulkClients(clients_ids, {
+        //         archived: false,
+        //         type: {
+        //             $ne: ReminderTypes.PAYMENT
+        //         }
+        //     }).exec();
+        //     this.reminders = this.mapReminders(docs);
+        // },
+        loadClients(){
+            this.loading = true;
+            this.unsubscribe();
             this.clients = [];
-            this.clientsObservable = ClientsModel.getClients(this.currentTemplateName)
-            .$.subscribe(docs => {
-                this.clients = docs;
-                this.loadReminders();
-                // openClientProfile(docs[0], this.template);
-                // editReminder({ client: docs[0] })
-            }); 
+            this.clientsQuery = ClientsModel.getClients(this.currentTemplateName);
+            this.subscribe(); 
         },
         loadReminders(){
             const clients_ids = this.clients.map(client => client._id);
@@ -85,7 +117,10 @@ export default {
                     $ne: ReminderTypes.PAYMENT
                 }
             })
-            .$.subscribe(docs => this.reminders = this.mapReminders(docs));
+            .$.subscribe(docs => {
+                this.reminders = this.mapReminders(docs);
+                this.loading = false;
+            });
         },
         mapReminders(items){
             const map = {};
@@ -112,6 +147,12 @@ export default {
             })
         }
         this.templates = templates;
+    },
+    activated(){
+        this.subscribe();
+    },
+    deactivated(){
+        this.unsubscribe();
     }
 }
 </script>

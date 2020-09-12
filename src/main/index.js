@@ -1,4 +1,5 @@
 import { app, BrowserWindow } from 'electron'
+import contextMenu from 'electron-context-menu';
 
 /**
  * Set `__static` path to static files in production
@@ -27,7 +28,6 @@ function createWindow () {
       webSecurity: false,
     }
   })
-
   mainWindow.setMinimumSize(1000, 620);
   mainWindow.maximize();
   mainWindow.setMenu(null)
@@ -40,6 +40,13 @@ function createWindow () {
     app.quit()
     mainWindow = null
   })
+
+  contextMenu({
+    window: mainWindow,
+    showSearchWithGoogle: false,
+    showCopyImage: false,
+    showLookUpSelection: false
+  });
 }
 
 app.on('ready', createWindow)

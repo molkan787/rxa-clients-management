@@ -1,7 +1,7 @@
 <template>
     <div class="page-header">
         <div class="search-side">
-            <v-text-field v-if="!hideSearchBox" :value="value" @input="$emit('input', $event)" :placeholder="searchPlaceholder" outlined dense hide-details class="white" prepend-inner-icon="search" />
+            <v-text-field v-if="!hideSearchBox" :value="value" @input="$emit('input', $event)" clearable :placeholder="searchPlaceholder" outlined dense hide-details class="white" prepend-inner-icon="search" />
             <slot name="left-side"></slot>
         </div>
         <div class="buttons-side">

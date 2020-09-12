@@ -50,6 +50,7 @@ export default {
     },
     indexes: [
         'date',
+        'type',
         'client_id',
     ],
     required: [

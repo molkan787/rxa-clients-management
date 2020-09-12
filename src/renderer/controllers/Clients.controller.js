@@ -8,8 +8,8 @@ import { PaymentsService } from '../services/Payments.service';
 
 export default class ClientsController extends Controller{
 
-    static async makePayment(client, amount){
-        await PaymentsService.makePayment(client, amount)
+    static async makePayment(client, amount, payment_date){
+        await PaymentsService.makePayment(client, amount, payment_date)
         await this.calcOutstadningFee(client._id);
     }
 

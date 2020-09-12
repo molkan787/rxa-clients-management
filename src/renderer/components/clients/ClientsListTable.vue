@@ -1,13 +1,15 @@
 <template>
     <div class="clients-list-table">
         <v-data-table
+            :loading="loading"
             :headers="headers"
             :items="clients"
             item-key="_id"
             :expanded="[]"
             show-expand
-            :search="search"
+            :search="my_search"
             :custom-filter="itemsFilterer"
+            :footer-props="{'items-per-page-options': [10, 20, 50]}"
             >
 
             <template v-slot:item="{ item, headers, isExpanded, expand }">
@@ -79,6 +81,10 @@ export default {
         search: {
             type: String,
             default: ''
+        },
+        loading: {
+            type: Boolean,
+            default: false
         }
     },
     computed: {
@@ -98,10 +104,18 @@ export default {
             return headers;
         }
     },
+    watch: {
+        search(val){
+            if(this.my_searchTimeout) clearTimeout(this.my_searchTimeout);
+            this.my_searchTimeout = setTimeout(() => this.my_search = val, 400);
+        }
+    },
     data: () => ({
         itemsFilterer(value, search, item){
             return item.no == parseInt(search) || new RegExp(search, 'i').test(item.business_name)
         },
+        my_search: '',
+        my_searchTimeout: null
     }),
     methods: {
         getRowClass(item){

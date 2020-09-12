@@ -96,33 +96,42 @@ export class RemindersService {
         })
     }
 
-    static generateDefaultReminders(client){
+    static async generateBulkDefaultReminders(clients){
+        const reminders = [];
+        for(let i = 0; i < clients.length; i++){
+            const _rems = await this.generateDefaultReminders(clients[i], true);
+            reminders.push(..._rems);
+        }
+        await RemindersModel.addBulkReminder(reminders);
+    }
+
+    static generateDefaultReminders(client, skipInsert){
         if(client.template == ClientsTemplates.LTD_COMPANIES){
-            return this.generateLtdDefaultReminders(client);
+            return this.generateLtdDefaultReminders(client, skipInsert);
         }else{
-            return this.generateStmDefaultReminders(client);
+            return this.generateStmDefaultReminders(client, skipInsert);
         }
     }
 
-    static async generateLtdDefaultReminders(client){
+    static async generateLtdDefaultReminders(client, skipInsert){
         const client_id = client._id;
         const { incorporated } = client.data;
-        await this.clearLtdDefaultReminders(client);
-        if(!incorporated) return;
+        // await this.clearLtdDefaultReminders(client);
+        if(!incorporated) return [];
         const inc_date = DateTime.fromISO(incorporated);
         const acct_due_date = inc_date.plus({ months: 18 });
         const annual_ret_due_date = inc_date.plus({ months: 12 });
-        await RemindersModel.addReminder({
+        const reminder1 = {
             date: acct_due_date.toJSDate().toJSON(),
             client_id,
             type: ReminderTypes.LTD_ACCT_DUE,
             content: {
-                title: 'ACCT DUE  DATE',
+                title: 'ACCT DUE DATE',
                 body: 'ACCT due date reminder'
             },
             notify_client: true
-        })
-        await RemindersModel.addReminder({
+        }
+        const reminder2 = {
             date: annual_ret_due_date.toJSDate().toJSON(),
             client_id,
             type: ReminderTypes.LTD_ANNUAL_RET_DUE,
@@ -131,13 +140,18 @@ export class RemindersService {
                 body: 'Annual due date reminder'
             },
             notify_client: true
-        })
+        }
+        if(!skipInsert){
+            await RemindersModel.addReminder(reminder1)
+            await RemindersModel.addReminder(reminder2)
+        }
+        return [reminder1, reminder2];
     }
 
-    static async generateStmDefaultReminders(client){
+    static async generateStmDefaultReminders(client, skipInsert){
         const client_id = client._id;
         const aprilDates = this._getAprilReminderDates();
-        await RemindersModel.addReminder({
+        const reminder1 = {
             client_id,
             date: aprilDates.primary,
             repeat: [aprilDates.repeat],
@@ -151,8 +165,8 @@ export class RemindersService {
                 body: 'ACCT DUE REMINDER'
             },
             notify_client: true
-        })
-        await RemindersModel.addReminder({
+        };
+        const reminder2 = {
             client_id,
             date: this._getDecemberReminderDate(),
             reschedule: {
@@ -165,7 +179,12 @@ export class RemindersService {
                 body: 'TAX RETURN REMINDER'
             },
             notify_client: true
-        })
+        };
+        if(!skipInsert){
+            await RemindersModel.addReminder(reminder1)
+            await RemindersModel.addReminder(reminder2)
+        }
+        return [reminder1, reminder2];
     }
 
     static _getAprilReminderDates(){

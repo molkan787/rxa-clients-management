@@ -31,12 +31,12 @@ export default class ClientsModel{
     static getLtdMonthlyDueList(){
         return this.getClients(ClientsTemplates.LTD_COMPANIES, {
             'data.incorporated': {
-                $regex: `^.+-${month()}`,
+                $regex: `^.+-${month()}-`,
             },
         });
     }
 
-    static getClients(template, filters){
+    static getClients(template, filters, pagination){
         const allowed = this.getAllowedClients();
         const extra = allowed ? {
             _id: {
@@ -51,7 +51,9 @@ export default class ClientsModel{
             },
             sort: [
                 { no: 'desc' }
-            ]
+            ],
+            skip: (pagination && pagination.skip) || undefined,
+            limit: (pagination && pagination.limit) || undefined
         });
     }
 
@@ -92,18 +94,19 @@ export default class ClientsModel{
 
     static async addBulkClients(bulkDetails, template){
         const now = nowJson();
-        let no = await this.reserveNo(template, bulkDetails.length);
+        console.time('Client bulk insert')
+        // let no = await this.reserveNo(template, bulkDetails.length);
         const docsData = bulkDetails.map(details => ({
             ...Object.decodepaths(details),
-            no: no++,
             template,
             created_at: now,
             updated_at: now,
         }));
         const { success } = await this.collection.bulkInsert(docsData);
-        for(let client of success){
-            await RemindersService.generateDefaultReminders(client);
-        }
+        console.timeEnd('Client bulk insert')
+        console.time('Reminders inserts');
+        await RemindersService.generateBulkDefaultReminders(success);
+        console.timeEnd('Reminders inserts');
         return success;
     }
 
