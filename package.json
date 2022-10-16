@@ -144,5 +144,8 @@
       "icon": "build/icons"
     }
   },
-  "license": null
+  "license": null,
+  "engines": {
+    "node": "10.24.1"
+  }
 }
