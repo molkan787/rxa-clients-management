@@ -1,6 +1,6 @@
 # rxa-clients-management
 
-> An electron-vue project
+> CRM Software specific for UK's Accounting Companies
 
 #### Build Setup
 
