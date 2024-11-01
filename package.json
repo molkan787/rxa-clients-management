@@ -2,7 +2,7 @@
   "name": "rxa-clients-management",
   "version": "1.0.0",
   "description": "An electron-vue project",
-  "author": "Dahmane Seghier <contact@dahmane.pl>",
+  "author": "Dahmane Seghier <seghier.dahmane@outlook.com>",
   "scripts": {
     "build": "node .electron-vue/build.js && electron-builder",
     "build:clean": "cross-env BUILD_TARGET=clean node .electron-vue/build.js",
@@ -144,7 +144,7 @@
       "icon": "build/icons"
     }
   },
-  "license": null,
+  "license": "MIT",
   "engines": {
     "node": "10.24.1"
   }
