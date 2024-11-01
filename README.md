@@ -1,6 +1,6 @@
 # rxa-clients-management
 
-> CRM Software specific for UK's Accounting Companies
+> CRM Software specific for UK's Accounting Companies (Made by Seghier Dahmane)
 
 #### Build Setup
 
