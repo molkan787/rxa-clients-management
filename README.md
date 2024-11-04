@@ -16,10 +16,10 @@ npm run build
 
 # run unit tests
 npm test
-
-
 ```
 
----
+#### Dependencies
+This app depend an a Backend Service Application [rxa-backend](https://github.com/molkan787/rxa-backend)
 
-This project was generated with [electron-vue](https://github.com/SimulatedGREG/electron-vue)@[45a3e22](https://github.com/SimulatedGREG/electron-vue/tree/45a3e224e7bb8fc71909021ccfdcfec0f461f634) using [vue-cli](https://github.com/vuejs/vue-cli). Documentation about the original structure can be found [here](https://simulatedgreg.gitbooks.io/electron-vue/content/index.html).
+Also there is a third app (optional) [rxa-client-webapp](https://github.com/molkan787/rxa-client-webapp) used as a portal for documents and/or expenses submission by company's customers
+
